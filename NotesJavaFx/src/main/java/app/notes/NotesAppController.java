@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -31,6 +32,9 @@ public class NotesAppController {
 	DatePicker dpDate;
 
 	@FXML
+	TextField tfTag;
+
+	@FXML
 	TableView<Note> tViewNotes;
 
 	@FXML
@@ -38,6 +42,9 @@ public class NotesAppController {
 
 	@FXML
 	TableColumn<Note, String> tcTitle;
+
+	@FXML
+	TableColumn<Note, String> tcTag;
 
 	//
 	private ObservableList<Note> notes;
@@ -49,6 +56,7 @@ public class NotesAppController {
 		// columns
 		tcDate.setCellValueFactory(new PropertyValueFactory<Note, String>("dateEntered"));
 		tcTitle.setCellValueFactory(new PropertyValueFactory<Note, String>("title"));
+		tcTag.setCellValueFactory(new PropertyValueFactory<Note, String>("tag"));
 
 		// table view
 		notes = FXCollections.observableArrayList();
@@ -62,6 +70,19 @@ public class NotesAppController {
 		workingNote.titleProperty().bindBidirectional(tfTitle.textProperty());
 		workingNote.dateEnteredProperty().bindBidirectional(dpDate.valueProperty());
 		workingNote.descriptionProperty().bindBidirectional(taDescription.textProperty());
+		workingNote.tagProperty().bindBidirectional(tfTag.textProperty());
+
+		//
+		tViewNotes.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+		tViewNotes.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+			//System.out.println(newSelection == null ? "null" : newSelection);
+			if (newSelection != null) {
+				workingNote.setDateEntered(newSelection.getDateEntered());
+				workingNote.setDescription(newSelection.getDescription());
+				workingNote.setTitle(newSelection.getTitle());
+				workingNote.setTag(newSelection.getTag());
+			}
+		});
 	}
 
 	/**
@@ -69,7 +90,9 @@ public class NotesAppController {
 	 */
 	private void saveNote() {
 		if (isAValidNote()) {
-			notes.add(new Note(workingNote.getTitle(), workingNote.getDateEntered(), workingNote.getDescription()));
+			Note note = new Note(workingNote.getTitle(), workingNote.getDateEntered(), workingNote.getDescription(),
+					workingNote.getTag());			
+			notes.add(note);
 			clearWorkinkNote();
 		} else {
 			Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -85,7 +108,7 @@ public class NotesAppController {
 	 */
 	private boolean isAValidNote() {
 
-		boolean titleIsNotEmpty = !"".equals(workingNote.getTitle().trim());
+		boolean titleIsNotEmpty = workingNote.getTitle() != null && !"".equals(workingNote.getTitle().trim());
 		boolean dateIsNotEmpty = dpDate.getValue() != null;
 		boolean isANewTitle = notes
 				.filtered(x -> x.titleProperty().getValue() == workingNote.titleProperty().getValue()).isEmpty();
@@ -97,6 +120,7 @@ public class NotesAppController {
 		tfTitle.textProperty().setValue("");
 		taDescription.textProperty().setValue("");
 		dpDate.setValue(null);
+		tfTag.setText("");
 	}
 
 }

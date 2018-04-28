@@ -26,13 +26,17 @@ public class Note {
 	private String description;
 	private StringProperty descriptionProperty;
 
+	private String tag;
+	private StringProperty tagProperty;
+
 	public Note() {
 	}
 
-	public Note(String title, LocalDate localDateTime, String description) {
+	public Note(String title, LocalDate localDateTime, String description, String tag) {
 		this.titleProperty = new SimpleStringProperty(title);
 		this.dateEnteredProperty = new SimpleObjectProperty<>(localDateTime);
 		this.descriptionProperty = new SimpleStringProperty(description);
+		this.tagProperty = new SimpleStringProperty(tag);
 	}
 
 	// title
@@ -85,11 +89,19 @@ public class Note {
 
 	// description
 	public String getDescription() {
-		return description;
+		if (descriptionProperty == null) {
+			return description;
+		} else {
+			return descriptionProperty.getValue();
+		}
 	}
 
 	public void setDescription(String description) {
-		this.description = description;
+		if (this.descriptionProperty == null) {
+			this.description = description;
+		} else {
+			this.descriptionProperty.set(description);
+		}
 	}
 
 	public StringProperty descriptionProperty() {
@@ -98,4 +110,74 @@ public class Note {
 		}
 		return descriptionProperty;
 	}
+
+	// tag
+	public String getTag() {
+		if (tagProperty == null) {
+			return tag;
+		} else {
+			return tagProperty.getValue();
+		}
+	}
+
+	public void setTag(String tag) {
+		if (this.tagProperty == null) {
+			this.tag = tag;
+		} else {
+			this.tagProperty.set(tag);
+		}
+	}
+
+	public StringProperty tagProperty() {
+		if (tagProperty == null) {
+			tagProperty = new SimpleStringProperty(this, "tag", tag);
+		}
+		return tagProperty;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Note other = (Note) obj;
+		if (title == null) {
+			if (other.title != null) {
+				return false;
+			}
+		} else if (!title.equals(other.title)) {
+			return false;
+		}
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Note [title=" + getTitle() + "]";
+	}
+	
+	
 }
