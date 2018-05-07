@@ -3,124 +3,141 @@ package app.notes;
 import app.notes.model.Note;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class NotesAppController {
 
-	@FXML
-	Button bClear;
+    @FXML
+    Button bClear;
 
-	@FXML
-	Button bSave;
+    @FXML
+    Button bSave;
 
-	@FXML
-	TextField tfTitle;
+    @FXML
+    TextField tfTitle;
 
-	@FXML
-	TextArea taDescription;
+    @FXML
+    TextArea taDescription;
 
-	@FXML
-	DatePicker dpDate;
+    @FXML
+    DatePicker dpDate;
 
-	@FXML
-	TextField tfTag;
+    @FXML
+    TextField tfTag;
 
-	@FXML
-	TableView<Note> tViewNotes;
+    @FXML
+    TableView<Note> tViewNotes;
 
-	@FXML
-	TableColumn<Note, String> tcDate;
+    @FXML
+    TableColumn<Note, String> tcDate;
 
-	@FXML
-	TableColumn<Note, String> tcTitle;
+    @FXML
+    TableColumn<Note, String> tcTitle;
 
-	@FXML
-	TableColumn<Note, String> tcTag;
+    @FXML
+    TableColumn<Note, String> tcTag;
 
-	//
-	private ObservableList<Note> notes;
+    //
+    private ObservableList<Note> notes;
 
-	private Note workingNote = new Note();
+    private Note viewNote = new Note();
 
-	public void initialize() {
+    public void initialize() {
 
-		// columns
-		tcDate.setCellValueFactory(new PropertyValueFactory<Note, String>("dateEntered"));
-		tcTitle.setCellValueFactory(new PropertyValueFactory<Note, String>("title"));
-		tcTag.setCellValueFactory(new PropertyValueFactory<Note, String>("tag"));
+        // columns
+        tcDate.setCellValueFactory(new PropertyValueFactory<>("dateEntered"));
+        tcTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
+        tcTag.setCellValueFactory(new PropertyValueFactory<>("tag"));
 
-		// table view
-		notes = FXCollections.observableArrayList();
-		tViewNotes.setItems(notes);
+        // table view
+        notes = FXCollections.observableArrayList();
+        tViewNotes.setItems(notes);
 
-		// actions
-		bClear.setOnAction(evt -> clearWorkinkNote());
-		bSave.setOnAction(evt -> saveNote());
+        // actions
+        bClear.setOnAction(evt -> clearWorkingNote());
+        bSave.setOnAction(evt -> saveNote());
 
-		// binding
-		workingNote.titleProperty().bindBidirectional(tfTitle.textProperty());
-		workingNote.dateEnteredProperty().bindBidirectional(dpDate.valueProperty());
-		workingNote.descriptionProperty().bindBidirectional(taDescription.textProperty());
-		workingNote.tagProperty().bindBidirectional(tfTag.textProperty());
+        // binding
+        viewNote.titleProperty().bindBidirectional(tfTitle.textProperty());
+        viewNote.dateEnteredProperty().bindBidirectional(dpDate.valueProperty());
+        viewNote.descriptionProperty().bindBidirectional(taDescription.textProperty());
+        viewNote.tagProperty().bindBidirectional(tfTag.textProperty());
 
-		//
-		tViewNotes.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		tViewNotes.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-			//System.out.println(newSelection == null ? "null" : newSelection);
-			if (newSelection != null) {
-				workingNote.setDateEntered(newSelection.getDateEntered());
-				workingNote.setDescription(newSelection.getDescription());
-				workingNote.setTitle(newSelection.getTitle());
-				workingNote.setTag(newSelection.getTag());
-			}
-		});
-	}
+        tViewNotes.getSelectionModel().selectedIndexProperty().addListener(
+                (observable, oldValue, newValue) -> {
 
-	/**
-	 * Save a new note if it is valid
-	 */
-	private void saveNote() {
-		if (isAValidNote()) {
-			Note note = new Note(workingNote.getTitle(), workingNote.getDateEntered(), workingNote.getDescription(),
-					workingNote.getTag());			
-			notes.add(note);
-			clearWorkinkNote();
-		} else {
-			Alert alert = new Alert(Alert.AlertType.ERROR);
-			alert.setTitle("Validation Error");
-			alert.setContentText("The note to be saved has invalid values!");
-			alert.showAndWait();
-		}
-	}
+                    if (newValue.intValue() >= 0) {
 
-	/**
-	 * 
-	 * @return true is the current Note is valid
-	 */
-	private boolean isAValidNote() {
+                        int ix = newValue.intValue();
+                        if ((ix == notes.size())) {
+                            return; // invalid data
+                        }
 
-		boolean titleIsNotEmpty = workingNote.getTitle() != null && !"".equals(workingNote.getTitle().trim());
-		boolean dateIsNotEmpty = dpDate.getValue() != null;
-		boolean isANewTitle = notes
-				.filtered(x -> x.titleProperty().getValue() == workingNote.titleProperty().getValue()).isEmpty();
+                        Note selectedNote = notes.get(ix);
+                        viewNote.setTitle(selectedNote.getTitle());
+                        viewNote.setDateEntered(selectedNote.getDateEntered());
+                        viewNote.setDescription(selectedNote.getDescription());
+                        viewNote.setTag(selectedNote.getTag());
+                    }
+                });
 
-		return titleIsNotEmpty && dateIsNotEmpty && isANewTitle;
-	}
+    }
 
-	private void clearWorkinkNote() {
-		tfTitle.textProperty().setValue("");
-		taDescription.textProperty().setValue("");
-		dpDate.setValue(null);
-		tfTag.setText("");
-	}
+    /**
+     * Save a new note if it is valid
+     */
+    private void saveNote() {
+        if (isAValidNote()) {
+
+            FilteredList<Note> filteredNotes = notes
+                    .filtered(x -> x.titleProperty().getValue().equals(viewNote.titleProperty().getValue()));
+
+            boolean isANewTitle = filteredNotes.isEmpty();
+
+            if (isANewTitle) {
+                Note note = new Note(viewNote.getTitle(), viewNote.getDateEntered(), viewNote.getDescription(),
+                        viewNote.getTag());
+                notes.add(note);
+            } else {
+                Note currentNote = filteredNotes.get(0);
+                currentNote.setTitle(viewNote.getTitle());
+                currentNote.setDateEntered(viewNote.getDateEntered());
+                currentNote.setDescription(viewNote.getDescription());
+                currentNote.setTag(viewNote.getTag());
+            }
+
+            clearWorkingNote();
+
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Validation Error");
+            alert.setContentText("The note to be saved has invalid values!");
+            alert.showAndWait();
+        }
+    }
+
+    /**
+     * @return true is the current Note is valid
+     */
+    private boolean isAValidNote() {
+
+        boolean titleIsNotEmpty = viewNote.getTitle() != null && !"".equals(viewNote.getTitle().trim());
+        boolean dateIsNotEmpty = dpDate.getValue() != null;
+
+        return titleIsNotEmpty && dateIsNotEmpty;
+    }
+
+    private void clearWorkingNote() {
+        tfTitle.textProperty().setValue("");
+        taDescription.textProperty().setValue("");
+        dpDate.setValue(null);
+        tfTag.setText("");
+        if (tViewNotes.getSelectionModel().selectedIndexProperty().get() >= 0) {
+            tViewNotes.getSelectionModel().clearSelection();
+        }
+    }
 
 }

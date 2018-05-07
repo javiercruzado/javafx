@@ -16,7 +16,7 @@ public class NotesApp extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			AnchorPane root = FXMLLoader.load(getClass().getResource("NotesApp.fxml"));
+			AnchorPane root = FXMLLoader.load(getClass().getResource("/app/notes/NotesApp.fxml"));
 			primaryStage.setTitle("Notes");
 			Scene scene = new Scene(root, 800, 600);
 			// primaryStage.getIcons().add(new Image("javafx.png"));
