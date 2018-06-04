@@ -1,12 +1,19 @@
 package app.notes;
 
 import app.notes.model.Note;
+import app.notes.repository.NoteRepository;
+import app.notes.util.EntityManagerUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 public class NotesAppController {
 
@@ -77,6 +84,7 @@ public class NotesAppController {
                         }
 
                         Note selectedNote = notes.get(ix);
+                        viewNote.setId(selectedNote.getId());
                         viewNote.setTitle(selectedNote.getTitle());
                         viewNote.setDateEntered(selectedNote.getDateEntered());
                         viewNote.setDescription(selectedNote.getDescription());
@@ -84,22 +92,27 @@ public class NotesAppController {
                     }
                 });
 
+        //test
+        //EntityManagerUtil.getEntityManager();
     }
 
     /**
      * Save a new note if it is valid
      */
     private void saveNote() {
+
         if (isAValidNote()) {
 
             FilteredList<Note> filteredNotes = notes
-                    .filtered(x -> x.titleProperty().getValue().equals(viewNote.titleProperty().getValue()));
+                    .filtered(x -> x.idProperty().getValue().equals(viewNote.idProperty().getValue()));
 
             boolean isANewTitle = filteredNotes.isEmpty();
 
             if (isANewTitle) {
                 Note note = new Note(viewNote.getTitle(), viewNote.getDateEntered(), viewNote.getDescription(),
                         viewNote.getTag());
+                NoteRepository repository = new NoteRepository();
+                repository.persist(note);
                 notes.add(note);
             } else {
                 Note currentNote = filteredNotes.get(0);
@@ -131,6 +144,7 @@ public class NotesAppController {
     }
 
     private void clearWorkingNote() {
+        viewNote.setId(0);
         tfTitle.textProperty().setValue("");
         taDescription.textProperty().setValue("");
         dpDate.setValue(null);
